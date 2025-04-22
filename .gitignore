@@ -125,3 +125,12 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+
+# vscode
+.vscode
+
+/data
+package-lock.json
+package-lock.json
+.DS_Store
