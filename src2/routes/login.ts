@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { google } from 'googleapis';
 import { findOrCreateFromGoogle } from '../data/user';
-import {TokenManager} from '../app/token'
+import {TokenManager} from '../services/google/token'
 
 const router = Router();
 
@@ -37,8 +37,8 @@ router.get('/callback', async (req: Request, res: Response) => {
   const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
   const userInfo = await oauth2.userinfo.get();
 
-  await findOrCreateFromGoogle(userInfo.data, tokens);
-
+  const user = await findOrCreateFromGoogle(userInfo.data, tokens);
+  req.session.userId = user?.id
   console.log('User info:', userInfo.data);
   res.redirect('/app');
 });

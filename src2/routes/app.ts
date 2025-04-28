@@ -1,19 +1,14 @@
 import { Router, Request, Response } from 'express';
 import { google } from 'googleapis';
 import { User } from '../data/user';
-import '../types/express-session';
+import '../express-session/express-session';
+import { requireLoginAndGoogleSession } from '../express-session/requireLogin'; 
 
 
 const router = Router();
 
-router.get('/', async (req: Request, res: Response) => {
-  if (!req.session?.tokens) {
-    console.log("redirect login")
-    return res.redirect('/login');
-  }
-
-  const oauth2Client = new google.auth.OAuth2();
-  oauth2Client.setCredentials(req.session.tokens);
+router.get('/', requireLoginAndGoogleSession, async (req: Request, res: Response) => {
+  const oauth2Client = req.googleSession
 
   try {
     const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
@@ -63,5 +58,9 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 import {showVideoComments} from "../app/video"
-router.get('/video/:id', showVideoComments);
+router.get('/video/:id',requireLoginAndGoogleSession, showVideoComments);
+
+// import categoriserRouter from '../app/categoriser';
+// router.use('/', categoriserRouter);
+
 export default router

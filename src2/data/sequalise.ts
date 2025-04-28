@@ -8,5 +8,5 @@ const sequelize = new Sequelize({
   logging: process.env.NODE_ENV !== 'production' ? false : false,
   
 });
- sequelize.sync({ force: true });
+ sequelize.sync({ force: false });
 export default sequelize;
