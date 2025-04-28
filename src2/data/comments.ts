@@ -14,6 +14,8 @@ class Comment extends Model {
   public originalText!:string;
   public etag!: string;
   public publishedAt!: Date;
+  public archive!: JSON[];
+  public edited?:Date
 
   
 }
@@ -42,12 +44,13 @@ const CommentModel = Comment.init({
     originalText: DataTypes.TEXT,
     etag: DataTypes.STRING,
     publishedAt: {type:DataTypes.DATE,allowNull:true},
+    edited: {type:DataTypes.DATE,allowNull:true},
 }, {
     sequelize,
     modelName: 'Comment',
 });
 async function commentToDB(comment: any, videoId: string) {
-    return await Comment.upsert({
+    const oldComment = (await Comment.findOne({where:{youtubeId:comment.id}}))?? new Comment({
         youtubeId: comment.id,
         videoId,
         parentId:comment.snippet?.parentId,
@@ -56,7 +59,18 @@ async function commentToDB(comment: any, videoId: string) {
         originalText: comment.snippet?.textOriginal,
         etag: comment.etag,
         publishedAt: comment.snippet?.publishedAt ? new Date(comment.snippet.publishedAt) : null,
-    });
+        edited:comment.snippet?.updatedAt ? new Date(comment.snippet.updatedAt) : null,
+        archive:[comment],
+    })
+    if (oldComment.etag != comment.etag){
+        oldComment.archive = Array.isArray(oldComment.archive) ? [comment, ...oldComment.archive] : [comment];
+        oldComment.text = comment.snippet?.textDisplay ?? oldComment.text;
+        oldComment.originalText = comment.snippet?.textOriginal ?? oldComment.originalText;
+        oldComment.etag = comment.etag ?? oldComment.etag;
+        oldComment.publishedAt = comment.snippet?.publishedAt ? new Date(comment.snippet.publishedAt) : oldComment.publishedAt;
+        oldComment.edited = comment.snippet?.updatedAt ? new Date(comment.snippet.updatedAt) : oldComment.edited;
+        await oldComment.save();
+    }
 }
 async function fromVideo(googleSession: OAuth2Client, videoId: string, query?: any) {
   const comments = await getCommentsForVideo(googleSession, videoId);
