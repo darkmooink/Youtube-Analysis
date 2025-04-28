@@ -10,4 +10,7 @@ router.use('/', homeRoutes);
 import loginRoutes from './routes/login';
 router.use('/login', loginRoutes);
 
-export default router;
+import appRoutes from './routes/app';
+router.use('/app', appRoutes)
+
+export default router;  

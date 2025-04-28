@@ -20,7 +20,7 @@ router.get('/', (req, res) => {
           </style>
         </head>
         <body>
-          <h1>Welcome</h1>
+          <h1>Welcome home</h1>
           <a href="/login" class="button">Login with Google</a>
         </body>
       </html>

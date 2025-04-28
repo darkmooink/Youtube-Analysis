@@ -1,0 +1,12 @@
+<html>
+  <head><title>Comments for <%= videoId %></title></head>
+  <body>
+    <h1>Comments for Video <%= videoId %></h1>
+    <ol>
+      <% comments.forEach(c => { %>
+        <li><%= c.author %>: 
+            <%= c.text %></li>
+      <% }) %>
+    </ol>
+  </body>
+</html>
