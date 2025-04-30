@@ -1,4 +1,4 @@
-import createYouTubeClient from "./youtube";
+import {YouTubeClient} from "./youtube";
 import { OAuth2Client } from 'google-auth-library';
 import { youtube_v3 } from 'googleapis';
 import { GaxiosResponse } from 'gaxios';
@@ -6,8 +6,7 @@ import { GaxiosResponse } from 'gaxios';
 const TEXTFORMAT:"plainText"|"html" = "html" 
 
 export async function getAllCommentsForVideo(oauth2Client: OAuth2Client, videoId: string): Promise<youtube_v3.Schema$Comment[]> {
-  const youTubeClient = createYouTubeClient(oauth2Client);
-  const allThreads: youtube_v3.Schema$CommentThread[] = [];
+  const youTubeClient = YouTubeClient.create(oauth2Client, "user");  const allThreads: youtube_v3.Schema$CommentThread[] = [];
   let nextPageToken: string | undefined = undefined;
 
   do {
