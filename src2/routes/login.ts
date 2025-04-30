@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import { google } from 'googleapis';
 import { findOrCreateFromGoogle } from '../data/user';
 import {TokenManager} from '../services/google/token'
+import { YtUser } from '../data/ytUser';
+import createYouTubeClient from '../services/google/youTube/youtube';
 
 const router = Router();
 
@@ -26,6 +28,15 @@ router.get('/', (req: Request, res: Response) => {
   res.redirect(url);
 });
 
+router.get('/consent', (req: Request, res: Response) => {
+  const url = oauth2Client.generateAuthUrl({
+    access_type: 'offline',
+    scope: scopes,
+    prompt: 'consent'
+  });
+  res.redirect(url);
+});
+
 router.get('/callback', async (req: Request, res: Response) => {
   const { code } = req.query;
 
@@ -37,7 +48,7 @@ router.get('/callback', async (req: Request, res: Response) => {
   const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
   const userInfo = await oauth2.userinfo.get();
 
-  const user = await findOrCreateFromGoogle(userInfo.data, tokens);
+  const user = await findOrCreateFromGoogle(userInfo.data, tokens)
   req.session.userId = user?.id
   console.log('User info:', userInfo.data);
   res.redirect('/app');
