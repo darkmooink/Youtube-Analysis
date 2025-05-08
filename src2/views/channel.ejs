@@ -2,6 +2,20 @@
 <html>
 <head>
   <title>Channel Details</title>
+
+<script>
+  function toggleVisibility(containerId, buttonId, showText, hideText) {
+    const container = document.getElementById(containerId);
+    const button = document.getElementById(buttonId);
+    if (container.style.display === 'none') {
+      container.style.display = 'block';
+      button.textContent = hideText;
+    } else {
+      container.style.display = 'none';
+      button.textContent = showText;
+    }
+  }
+</script>
 </head>
 <body>
   <h1>Channel Details</h1>
@@ -23,9 +37,10 @@
     <button type="submit" name="updateVideo" value="true">Update</button>
   </form>
   <%} %>
-<p><strong>Videos:</strong><%
-  if (videos.length > 0) { %>
-    <ul>
+<p><strong>Videos:</strong>  <%
+  if (videos.length > 0) { %><button id="toggleVideosButton" onclick="toggleVisibility('videosContainer', 'toggleVideosButton', 'Show Videos', 'Hide Videos');">Show Videos</button>
+
+    <ul id="videosContainer" style="display: none;">
       <% videos.forEach(video => { %>
         <li><%= video.title %> - <%= video.publishedAt %></li>
       <% }) %>
