@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Channel Details</title>
+</head>
+<body>
+  <h1>Channel Details</h1>
+
+  <p><strong>Channel ID:</strong> <%= channelID %></p>
+
+  <% if (channelDetails.channel) { %>
+    <p><strong>Title:</strong> <%= channelDetails.channel.channelName %></p>
+    <p><strong>Description:</strong> <%= channelDetails.channel.channelDescription %></p>
+    <p><strong>Subscribers:</strong> <%= channelDetails.channel.subscriberCount %></p>
+    <p><strong>Status:</strong> <%= channelDetails.channel.status %></p>
+    <p><strong>Last Checked:</strong> <%= channelDetails.channel.lastCheckedAt %></p>
+    
+    <% const uploads = channelDetails.uploads || {}; 
+    const videos = uploads.videos || [];%>
+<p><strong>Vidos Uploaded:</strong> <%=videos.length%>/<%= uploads.playlist.size %></p>
+<%if (videos.length < uploads.playlist.size) {%>
+  <form method="GET" action="">
+    <button type="submit" name="updateVideo" value="true">Update</button>
+  </form>
+  <%} %>
+<p><strong>Videos:</strong><%
+  if (videos.length > 0) { %>
+    <ul>
+      <% videos.forEach(video => { %>
+        <li><%= video.title %> - <%= video.publishedAt %></li>
+      <% }) %>
+    </ul>
+  <% } else { %>
+    <p>No videos found.</p>
+  <% } %></p>
+  <% } else { %>
+    <p>Channel not found.</p>
+  <% } %>
+
+</body>
+</html>

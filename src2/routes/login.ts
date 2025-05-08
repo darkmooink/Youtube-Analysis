@@ -2,8 +2,8 @@ import { Router, Request, Response } from 'express';
 import { google } from 'googleapis';
 import { findOrCreateFromGoogle } from '../data/user';
 import {TokenManager} from '../services/google/token'
-import { YtUser } from '../data/ytUser';
-import createYouTubeClient from '../services/google/youTube/youtube';
+
+import {createYouTubeClient} from '../services/google/youTube/youtube';
 
 const router = Router();
 
@@ -50,9 +50,13 @@ router.get('/callback', async (req: Request, res: Response) => {
 
   const user = await findOrCreateFromGoogle(userInfo.data, tokens)
   req.session.userId = user?.id
+  
+
+
   console.log('User info:', userInfo.data);
   res.redirect('/app');
 });
+
 
 // router.get('/logout', (req: Request, res: Response) => {
 //     req.session = null;

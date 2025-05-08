@@ -1,7 +1,8 @@
 {
     "ignore": [
       "*.json",
-      "*data/*"  
+      "*.sqlite*",
+      "*.ejs"  
     ]
   }
   

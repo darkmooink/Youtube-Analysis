@@ -8,9 +8,7 @@
     "start-1": "nodemon src/index.ts",
     "test": "jest --watch",
     "run2": "nodemon src2/main.ts",
-    "start": "concurrently \"npm:dev\" \"npm:sync\"",
-    "dev": "nodemon src2/main.ts",
-    "sync": "node browsersync.js"
+    "dev": "nodemon --exec \"clear && node --inspect -r ts-node/register src2/main.ts\""
   },
   "keywords": [],
   "author": "",
@@ -28,11 +26,13 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
+    "@dqbd/tiktoken": "^1.0.21",
     "dotenv": "^16.4.5",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
     "googleapis": "^136.0.0",
     "open": "^10.1.0",
+    "openai": "^4.96.2",
     "pg": "^8.11.5",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.3",

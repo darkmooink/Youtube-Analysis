@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { google } from 'googleapis';
-import createYouTubeClient from "../services/google/youTube/youtube"
+import {createYouTubeClient} from "../services/google/youTube/youtube"
 import { User } from '../data/user';
 import TokenManager from '../services/google/token';
 import { GoogleSession } from '../services/google/session';

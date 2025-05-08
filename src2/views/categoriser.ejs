@@ -1,0 +1,31 @@
+<script>
+    const buttons = document.querySelectorAll('.category-btn');
+    const submitBtn = document.getElementById('submitBtn');
+    const selections = new Set();
+  
+    document.addEventListener('keydown', (e) => {
+      const key = e.key.toLowerCase();
+      buttons.forEach(btn => {
+        if (btn.dataset.key === key) {
+          btn.classList.toggle('active');
+          const cat = btn.dataset.category;
+          if (selections.has(cat)) selections.delete(cat);
+          else selections.add(cat);
+        }
+      });
+    });
+  
+    submitBtn.addEventListener('click', async () => {
+      const payload = {
+        commentId: "<%= comment.id %>",
+        categories: Array.from(selections),
+        videoId: "<%= videoId || '' %>", // <-- Pass videoId if available
+      };
+      await fetch('/categoriser/submit', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload),
+      });
+      window.location.href = "<%= videoId ? `/categoriser/${videoId}` : '/categoriser' %>";
+    });
+  </script>

@@ -69,8 +69,8 @@ async function commentToDB(comment: any, videoId: string) {
         oldComment.etag = comment.etag ?? oldComment.etag;
         oldComment.publishedAt = comment.snippet?.publishedAt ? new Date(comment.snippet.publishedAt) : oldComment.publishedAt;
         oldComment.edited = comment.snippet?.updatedAt ? new Date(comment.snippet.updatedAt) : oldComment.edited;
-        await oldComment.save();
     }
+    await oldComment.save();
 }
 async function fromVideo(googleSession: OAuth2Client, videoId: string, query?: any) {
   const comments = await getCommentsForVideo(googleSession, videoId);
@@ -78,6 +78,8 @@ async function fromVideo(googleSession: OAuth2Client, videoId: string, query?: a
   for (const comment of comments) {
     await commentToDB(comment,videoId)
   }
-  return Comment.findAll({where:{videoId:videoId}})
+  const dbcomments = Comment.findAll({where:{videoId:videoId}})
+  console.log(`${comments.length} yt comments, ${(await dbcomments).length} db comments`)
+  return dbcomments
 }
 export { Comment, commentToDB, fromVideo };

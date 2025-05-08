@@ -19,6 +19,7 @@ router.get('/', requireLoginAndGoogleSession, async (req: Request, res: Response
       mine: true,
     });
 
+
     const channel = channelResponse.data.items?.[0];
     const name = channel?.snippet?.title || 'user';
 
@@ -48,6 +49,7 @@ router.get('/', requireLoginAndGoogleSession, async (req: Request, res: Response
           <h1>Welcome ${name}</h1>
           ${videoCount} videos with ${commentCount} comments
           ${videosResponse.data.items?.pop()?.id?.videoId}
+          <a href="app/video/b3TOVBNSJDA">comments</a>
         </body>
       </html>
     `);
@@ -59,6 +61,8 @@ router.get('/', requireLoginAndGoogleSession, async (req: Request, res: Response
 
 import {showVideoComments} from "../app/video"
 router.get('/video/:id',requireLoginAndGoogleSession, showVideoComments);
+import {showChannelDetails} from "../app/channel"
+router.get('/channel/:id',requireLoginAndGoogleSession, showChannelDetails);
 
 // import categoriserRouter from '../app/categoriser';
 // router.use('/', categoriserRouter);

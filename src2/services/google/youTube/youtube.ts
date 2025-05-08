@@ -1,10 +1,25 @@
 import { google, youtube_v3 } from "googleapis";
 import { OAuth2Client } from 'google-auth-library';
+import { options } from "../../../types";
 
-function createYouTubeClient(oauth2:OAuth2Client):youtube_v3.Youtube{
+export function createYouTubeClient(oauth2:OAuth2Client):youtube_v3.Youtube{
     return google.youtube({ version: 'v3', auth: oauth2 });
 }
-export default createYouTubeClient
+
+export function createYouTubeClientWithKey(){
+  return google.youtube({ version: 'v3', auth: process.env.YOUTUBE_API_KEY });
+}
+
+export function createYouTubeClientFromOptions(options:options & any):options & any{
+  if (!options?.youtube) {
+    if (!options?.auth) {
+      throw new Error("Cannot create YouTube client: missing auth");
+    }
+    options.youtube = createYouTubeClient(options.auth);
+  }
+  return options
+}
+
 
 export class YouTubeClient {
   private static bootTime = new Date()
@@ -61,13 +76,15 @@ export class YouTubeClient {
       "watermarks.set": 50,
       "watermarks.unset": 50
     }
+    playlistItems: any;
 
   static create(oauth2: OAuth2Client, bucket:string): youtube_v3.Youtube {
+    return createYouTubeClient(oauth2)
     if (!this.counts[bucket]){
       throw new Error(`Quota bucket "${bucket}" is not defined.`);
     }
     const yt = createYouTubeClient(oauth2);
-
+    return yt
     function wrap(target: any, path: string[] = []): any {
       return new Proxy(target, {
         get(obj, prop, receiver) {

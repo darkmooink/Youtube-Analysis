@@ -1,13 +1,28 @@
 import { OAuth2Client, Credentials } from 'google-auth-library';
+import { GoogleSession } from './session';
+import { User } from '../../data/user';
 
 export class TokenManager {
   private tokens: Credentials;
   private client: OAuth2Client;
 
-  constructor(tokens: Credentials, client: OAuth2Client) {
+  constructor(tokens: Credentials, client?: OAuth2Client) {
     this.tokens = tokens;
+    if (client){
     this.client = client;
+    }else{
+      this.client = GoogleSession.fromCredentials(tokens)
+    }
     this.client.setCredentials(tokens);
+  }
+
+  async getFromUser(userID:number){
+    let user = await User.getUser(userID)
+    if (user && user.token){
+      return new TokenManager(user?.token)
+    }else{
+      return null
+    }
   }
 
   async ensureValidAccessToken(): Promise<string> {
@@ -31,6 +46,10 @@ export class TokenManager {
   async getCredentials(): Promise<Credentials> {
     await this.ensureValidAccessToken();
     return this.tokens;
+  }
+  async getClient(){
+    await this.ensureValidAccessToken();
+    return this.client
   }
 }
 export default TokenManager
