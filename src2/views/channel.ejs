@@ -42,7 +42,7 @@
 
     <ul id="videosContainer" style="display: none;">
       <% videos.forEach(video => { %>
-        <li><%= video.title %> - <%= video.publishedAt %></li>
+        <li><%= video.title %> - <%= video.publishedAt %> - <%= video.archive.length%></li>
       <% }) %>
     </ul>
   <% } else { %>
@@ -50,6 +50,23 @@
   <% } %></p>
   <% } else { %>
     <p>Channel not found.</p>
+  <% } %>
+  <% const comments = channelDetails.comments || [];
+  if (channelDetails.channel.commentCount > 0) {%>
+    <p><strong>Comments:</strong><%=channelDetails.comments.length%>/<%=channelDetails.channel.commentCount%><button id="toggleCommentsButton" onclick="toggleVisibility('commentsContainer', 'toggleCommentsButton', 'Show Comments', 'Hide Comments');">Show Comments</button>
+    <% if (channelDetails.comments.length < channelDetails.channel.commentCount){%>
+       <form method="GET" action="">
+    <button type="submit" name="updateComments" value="true">Update</button>
+  </form>
+      <%}%>
+    </p>
+    <ul id="commentsContainer" style="display: none;">
+      <% comments.forEach(comment => { %>
+        <li><%= comment.text %> - <%= comment.publishedAt %></li>
+      <% }) %>
+    </ul>
+  <% } else { %>
+    <p>No comments found.</p>
   <% } %>
 
 </body>

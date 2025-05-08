@@ -3,6 +3,8 @@ import sequelize from './sequalise';
 import getCommentsForVideo from "../services/google/youTube/comment";
 import { OAuth2Client } from 'google-auth-library';
 import "../services/google/youTube/comment"
+import { createYouTubeClient } from '../services/google/youTube/youtube';
+import { youtube_v3 } from 'googleapis';
 
 class Comment extends Model {
   public id!: number;
@@ -16,6 +18,22 @@ class Comment extends Model {
   public publishedAt!: Date;
   public archive!: JSON[];
   public edited?:Date
+
+
+static async  fromVideo(videoId: string, youTube?: youtube_v3.Youtube) {
+    let log = ""
+    if (youTube) {
+        const comments = await getCommentsForVideo(youTube, videoId);
+        for (const comment of comments) {
+            await commentToDB(comment,videoId)
+        }
+        log = `Fetched ${comments.length} comments for video ${videoId}`;
+    }
+
+    const dbcomments = Comment.findAll({where:{videoId:videoId}})
+    console.log(`${log} ${(await dbcomments).length} db comments`)
+    return dbcomments
+}
 
   
 }
@@ -73,13 +91,7 @@ async function commentToDB(comment: any, videoId: string) {
     await oldComment.save();
 }
 async function fromVideo(googleSession: OAuth2Client, videoId: string, query?: any) {
-  const comments = await getCommentsForVideo(googleSession, videoId);
-
-  for (const comment of comments) {
-    await commentToDB(comment,videoId)
-  }
-  const dbcomments = Comment.findAll({where:{videoId:videoId}})
-  console.log(`${comments.length} yt comments, ${(await dbcomments).length} db comments`)
-  return dbcomments
+    const youTube = createYouTubeClient(googleSession);
+    return Comment.fromVideo(videoId, youTube)
 }
 export { Comment, commentToDB, fromVideo };

@@ -5,6 +5,7 @@ import { Playlist } from './playlist';
 import { createYouTubeClientFromOptions } from '../services/google/youTube/youtube';
 import { getAllPlaylistItems } from '../services/google/youTube/playlistItems';
 import { getVideosDetails } from '../services/google/youTube/video';
+import { youtube_v3 } from 'googleapis';
 export class Video extends Model {
     public youtubeId!: string;
     public channelId!: string;
@@ -12,7 +13,7 @@ export class Video extends Model {
     public description!: string;
     public publishedAt?: Date;
     public lastChecked?: Date;
-    public archive?: object;
+    public archive?: youtube_v3.Schema$Video[];
     public static async getByChannelId(channelId: string, options?: options & {get:boolean, archive:boolean}): Promise<Video[]> {
         if (options && options.get && (options.auth || options.youtube)) {
             const uploadsPlaylist = await Playlist.getByChannelId(channelId, options);
@@ -51,7 +52,7 @@ export class Video extends Model {
                 const videoId = video.id!;
                 const videoData = newVideos.find(v => v.youtubeId === videoId);
                 if (videoData) {
-                  videoData.archive = video;
+                  videoData.archive = [video];
                 }
               }
             }
