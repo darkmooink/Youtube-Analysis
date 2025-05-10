@@ -48,13 +48,15 @@ router.get('/callback', async (req: Request, res: Response) => {
   const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
   const userInfo = await oauth2.userinfo.get();
 
-  const user = await findOrCreateFromGoogle(userInfo.data, tokens)
-  req.session.userId = user?.id
-  
-
+  const user = await findOrCreateFromGoogle(userInfo.data, tokens);
+  req.session.userId = user?.id;
 
   console.log('User info:', userInfo.data);
-  res.redirect('/app');
+
+  // Redirect to the original URL or a default page
+  const redirectTo = req.session.redirectTo || '/app';
+  delete req.session.redirectTo; // Clean up the session
+  res.redirect(redirectTo);
 });
 
 

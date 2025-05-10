@@ -8,6 +8,7 @@ declare module 'express-session' {
   interface SessionData {
     tokens?: Credentials,
     userId?: number
+    redirectTo?: string;
   }
 }
 

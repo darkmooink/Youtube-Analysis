@@ -8,6 +8,7 @@ import { GoogleSession } from '../services/google/session';
 export function requireLogin(req: Request, res: Response, next: NextFunction) {
   if (!req.session?.userId) {
     console.log("requireLogin: no user session, redirecting to /login");
+    req.session.redirectTo = req.originalUrl; // Store the original URL
     return res.redirect('/login');
   }
   next();
