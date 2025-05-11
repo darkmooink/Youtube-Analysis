@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Details</title>
+</head>
+<body>
+    <h1>Video Details</h1>
+    <ul>
+        <li><strong>ID:</strong> <%= video.id %></li>
+        <li><strong>Author (Channel Title):</strong> <%= video.author %></li>
+        <li><strong>Title:</strong> <%= video.title %></li>
+        <li><strong>Description:</strong> <%= video.description %></li>
+        <li><strong>Published At:</strong> <%= video.publishedAt %></li>
+        <li><strong>Last Checked:</strong> <%= video.lastChecked %></li>
+        <li><strong>Comment Count:</strong><a href="<%= video.id %>/comments"> <%= video.commentCount %></a></li>
+        <li><strong>Recheck Interval:</strong> <%= video.recheckInterval %> seconds</li>
+        <li><strong>Etag:</strong> <%= video.etag %></li>
+        </li>
+    </ul>
+</body>
+</html>

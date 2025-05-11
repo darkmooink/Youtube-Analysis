@@ -6,107 +6,74 @@ import { createYouTubeClient, createYouTubeClientFromOptions, createYouTubeClien
 import { getPlaylistsDetails } from '../services/google/youTube/playlist';
 import { Channel } from './channel';
 import { options } from '../types'
+import { getAllPlaylistItems } from '../services/google/youTube/playlistItems';
 export class Playlist extends Model{
-    public youtubeId!:string;
-    public type!:string;
-    public author?:string;
-    public lastChecked?:Date;
-    public priority!:number
-    public size?:number
+    public Id!:string;
+    public title!:string;
+    public author!:string;
+    public lastChecked!:Date;
+    public priority!:number;
+    public size!:number;
+    public videos!:youtube_v3.Schema$PlaylistItem[];
+    public etag!:string;
+    /*
+    * The interval in seconds to recheck the playlist
+    * @default 86400
+    */
+    public recheckInterval!:number
 
-    async getvideos(options?:options){
-        if(!this.youtubeId) throw new Error("Playlist has no youtubeId")
-        if(options){
-            options= createYouTubeClientFromOptions(options)
-        }else{
-            throw new Error("Options are required")
-        }
-        const playlistItems = await options?.youtube?.playlistItems.list({
-            part: ['snippet'],
-            maxResults: 50,
-            playlistId: this.youtubeId,
-        })
-        return playlistItems?.data.items
-    }
-
-    static async getByChannelId(channelId:string, options?:{youtube?:youtube_v3.Youtube, auth?:OAuth2Client, query?:FindOptions<Playlist>}):Promise<Playlist[]>{
-        const playlists = await Playlist.findAll({
-            ...(options?.query || {}),
-            where: {
-              ...(options?.query?.where || {}),
-              author: channelId
-            }
-          });
-        //todo: check if the lastChecked is older than 1 day for  each playlist
-        if(playlists.length>0)return playlists
-        return Playlist.createFromDBChannel((await Channel.getChannelById(channelId,options))!, options)
-    }
-    static async createFromDBChannel(channel:Channel, options?:{youtube?:youtube_v3.Youtube, auth?:OAuth2Client}):Promise<Playlist[]>{
-        if (!channel.archive || channel.archive.length == 0){
-            channel = (await Channel.getChannelById(channel.youtubeChannelId))!
-        }
-        return this.createFromYTChannel(channel.archive![0],options)
-    }
+    public static async getFromId(id:string, youtube?:youtube_v3.Youtube):Promise<Playlist>{
+        if(!id) throw new Error("Playlist has no youtubeId")
+        let db_playlist = await Playlist.findByPk(id)
         
-    static async createFromYTChannel(channel:youtube_v3.Schema$Channel, options?:{youtube?:youtube_v3.Youtube, auth?:OAuth2Client}):Promise<Playlist[]>{
+        if(db_playlist && db_playlist.lastChecked > new Date(Date.now() - db_playlist.recheckInterval * 1000) ) return db_playlist
         
-        if(options && !options.youtube && options.auth){
-                options.youtube = createYouTubeClient(options.auth)
+        if(!youtube) {
+            youtube = createYouTubeClientWithKey()
         }
-        await Channel.getChannelById(channel.id!,options)
-        if(!channel.contentDetails?.relatedPlaylists){
-            console.warn(`channel ${channel.id} ${channel.snippet?.title} is missing playlists`)
-            return []
+        const yt_playlist = (await getPlaylistsDetails(youtube, [id]))[0]
+        if (!yt_playlist) {
+            throw new Error(`Playlist with ID ${id} not found`);
         }
-        let playlistsToUpdate:Promise<[Playlist, boolean | null]>[] = []
-        for (const [key, playlistId] of Object.entries(channel.contentDetails.relatedPlaylists)) {
-            if (!playlistId) continue;
-            console.log(`Type: ${key}, Playlist ID: ${playlistId}, author: ${channel.id}`);
-            const existing = await Playlist.findByPk(playlistId)
-            const playlist = Playlist.upsert({
-                youtubeId: playlistId,
-                type: key,
-                author: channel.id
-            });
+        if (!db_playlist) {
+            await Channel.getChannelById(yt_playlist.snippet?.channelId || "", youtube)
+            db_playlist = Playlist.build({ Id: yt_playlist.id });
+        }
+        db_playlist = await Playlist.saveFromYoutube(yt_playlist, db_playlist)
+        await db_playlist.getVideos(youtube)
 
-            if(!existing || existing.lastChecked == null){
-                playlistsToUpdate.push(playlist)
-                
-            }
-        }
-        if (playlistsToUpdate.length>0 && options?.youtube){
-            for(const playlist of playlistsToUpdate){
-                const pl = await playlist
-                if (pl[0] instanceof Playlist) {
-                    await pl[0].updateFromYT(options);
-                }
-                
-            }
-        } 
-        const playlists = await Playlist.findAll({where:{author:channel.id}})
-        return playlists
+        return db_playlist
+
+    }
+    public async getVideos(youtube?:youtube_v3.Youtube):Promise<youtube_v3.Schema$PlaylistItem[]>{
+        if(!youtube || this.videos.length == this.size) return this.videos
+        this.videos = await getAllPlaylistItems(youtube, this.Id)
+        this.size = this.videos.length
+        await this.save()
+        return this.videos
     }
 
-    public async updateFromYT(options:options){
-        try{
-            options = createYouTubeClientFromOptions(options)
-            const playlistFromYoutube = await options.youtube?.playlists.list({
-                part:["contentDetails"],
-                id:[this.youtubeId]
-            })
-            const items = playlistFromYoutube?.data.items
-            const firstitem = items![0]
-            const count = firstitem.contentDetails?.itemCount
-            this.size = count!
-            this.lastChecked = new Date()
-            this.save()
-        }catch (error){
-            console.log(`playlist update error happened`, error)
+
+    static async saveFromYoutube(yt_playlist:youtube_v3.Schema$Playlist, db_playlist?:Playlist|null):Promise<Playlist> {
+        if (!db_playlist) {
+            if (!yt_playlist.id) {
+                throw new Error("Playlist ID is required to save playlist data");
+            }
+            db_playlist = Playlist.build({ Id: yt_playlist.id });
         }
+        db_playlist.title = yt_playlist.snippet?.title || db_playlist.title || "";
+        db_playlist.author = yt_playlist.snippet?.channelId || db_playlist.author || "";
+        db_playlist.lastChecked = new Date();
+        db_playlist.priority = 0;
+        db_playlist.size = yt_playlist.contentDetails?.itemCount || -1;
+        db_playlist.videos = [];
+        db_playlist.etag = yt_playlist.etag || db_playlist.etag || "";
+        await db_playlist.save();
+        return db_playlist
     }
 }
 Playlist.init({
-    youtubeId:{
+    Id:{
         type:DataTypes.STRING,
         primaryKey:true,
     },
@@ -127,6 +94,20 @@ Playlist.init({
         allowNull: true,
         defaultValue: null
     },
+
+    recheckInterval:{
+        type:DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 86400
+    },
+    videos:{
+        type: DataTypes.JSONB,
+        defaultValue: []
+    },
+    etag:{
+        type: DataTypes.STRING,
+        allowNull: false,
+    }
 
 }, {
   sequelize,

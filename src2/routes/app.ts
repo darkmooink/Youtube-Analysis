@@ -46,7 +46,7 @@ router.get('/', requireLoginAndGoogleSession, async (req: Request, res: Response
       <html>
         <head><title>Welcome</title></head>
         <body>
-          <h1>Welcome ${name}</h1>
+          <h1>Welcome <a href="/app/channel/${channel?.id}">${name}</a></h1>
           ${videoCount} videos with ${commentCount} comments
           ${videosResponse.data.items?.pop()?.id?.videoId}
           <a href="app/video/b3TOVBNSJDA">comments</a>
@@ -59,10 +59,15 @@ router.get('/', requireLoginAndGoogleSession, async (req: Request, res: Response
   }
 });
 
-import {showVideoComments} from "../app/video"
-router.get('/video/:id',requireLoginAndGoogleSession, showVideoComments);
 import {showChannelDetails} from "../app/channel"
+import { showPlaylistDetails } from '../app/playlist';
+import { showVideoDetails } from '../app/video';
+import { showVideoComments } from '../app/comments';
+router.get('/channel/',requireLoginAndGoogleSession, showChannelDetails);
 router.get('/channel/:id',requireLoginAndGoogleSession, showChannelDetails);
+router.get('/playlist/:id',requireLoginAndGoogleSession, showPlaylistDetails);
+router.get('/video/:id',requireLoginAndGoogleSession, showVideoDetails);
+router.get('/video/:id/comments',requireLoginAndGoogleSession, showVideoComments);
 
 // import categoriserRouter from '../app/categoriser';
 // router.use('/', categoriserRouter);

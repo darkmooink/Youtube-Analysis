@@ -2,107 +2,136 @@ import { DataTypes, Model } from 'sequelize';
 import sequelize from './sequalise';
 import { options } from '../types';
 import { Playlist } from './playlist';
-import { createYouTubeClientFromOptions } from '../services/google/youTube/youtube';
+import { createYouTubeClientFromOptions, createYouTubeClientWithKey } from '../services/google/youTube/youtube';
 import { getAllPlaylistItems } from '../services/google/youTube/playlistItems';
 import { getVideosDetails } from '../services/google/youTube/video';
 import { youtube_v3 } from 'googleapis';
+import { Channel } from './channel';
 export class Video extends Model {
-    public youtubeId!: string;
-    public channelId!: string;
+    public id!: string;
+    /*
+    * The channelId of the video
+    */
+    public authorID!: string;
     public title!: string;
     public description!: string;
-    public publishedAt?: Date;
-    public lastChecked?: Date;
-    public archive?: youtube_v3.Schema$Video[];
+    public publishedAt!: Date;
+    public lastChecked!: Date;
+    public archive!: youtube_v3.Schema$Video[];
+    public etag!: string;
+    public commentCount!: number;
+    public commentLastPageToken?: string;
+    /*
+    * The interval in seconds to recheck the playlist
+    * @default 86400
+    */
+    public recheckInterval!:number
+    /**
+     * @deprecated This method is deprecated and not compatible with the new structure.
+     * Please use the updated methods for fetching videos by channelId.
+     */
     public static async getByChannelId(channelId: string, options?: options & {get:boolean, archive:boolean}): Promise<Video[]> {
-        if (options && options.get && (options.auth || options.youtube)) {
-            const uploadsPlaylist = await Playlist.getByChannelId(channelId, options);
-            options = createYouTubeClientFromOptions(options);
-            const youTubeClient = options!.youtube;
-
-            const existingVideos = await Video.findAll({
-                attributes: ['youtubeId'],
-                where: { channelId: channelId },
-            });
-            const existingVideoIds = new Set(existingVideos.map(video => video.youtubeId));
-
-            const videos = await getAllPlaylistItems(youTubeClient!, uploadsPlaylist[0].youtubeId);
-            const newVideos:Partial<Video>[] = [];
-
-            for (const video of videos) {
-                if (video.snippet?.resourceId?.kind === 'youtube#video') {
-                    const videoId = video.snippet.resourceId.videoId!;
-                    if (!existingVideoIds.has(videoId)) {
-                      
-                        newVideos.push({
-                            youtubeId: videoId,
-                            channelId: channelId,
-                            title: video.snippet?.title!,
-                            description: video.snippet?.description!,
-                            publishedAt: new Date(video.snippet?.publishedAt!),
-                            lastChecked: new Date()
-                        });
-                    }
-                }
-            }
-            if (options!.archive && newVideos.length > 0) {
-              const newVideoIds = newVideos.map(video => video.youtubeId) as string[];
-              const videoDetails = await getVideosDetails(youTubeClient!, newVideoIds);
-              for (const video of videoDetails) {
-                const videoId = video.id!;
-                const videoData = newVideos.find(v => v.youtubeId === videoId);
-                if (videoData) {
-                  videoData.archive = [video];
-                }
-              }
-            }
-
-            if (newVideos.length > 0) {
-                await Video.bulkCreate(newVideos, { ignoreDuplicates: true });
-            }
-        }
-        const videos = await Video.findAll({
-            where: {
-                channelId: channelId,
-            },
-        });
-        if (videos.length > 0) return videos;
+        console.warn('Video.getByChannelId is deprecated and not compatible with the new structure.');
         return [];
     }
+    public static async getFromId(id: string, youtube:youtube_v3.Youtube): Promise<Video> {
+        if (!id) throw new Error("Video has no youtubeId");
+        let db_video = await Video.findByPk(id);
+
+        if (db_video && db_video.lastChecked > new Date(Date.now() - 86400 * 1000)) return db_video;
+        if (!youtube) {
+            youtube = createYouTubeClientWithKey();
+        }
+        const yt_video = (await getVideosDetails(youtube, [id]))[0];
+        if (!yt_video) {
+            throw new Error(`Video with ID ${id} not found`);
+        }
+        if (!db_video) {
+            await Channel.getChannelById(yt_video.snippet?.channelId || "", youtube);
+            db_video = await Video.saveFromYoutube(yt_video);
+        }else {
+
+            db_video = await Video.saveFromYoutube(yt_video, db_video);
+        }
+        return db_video!;
+
+    }
+    public static async saveFromYoutube(yt_video: youtube_v3.Schema$Video, db_video?: Video): Promise<Video> {
+        if (!db_video) {
+            if (!yt_video.id) {
+                throw new Error("Video ID is required to save video data");
+            }
+            db_video = Video.build({ id: yt_video.id });
+        }
+        db_video.title = yt_video.snippet?.title || db_video.title || "";
+        db_video.authorID = yt_video.snippet?.channelId || db_video.authorID || "";
+        db_video.description = yt_video.snippet?.description || db_video.description || "";
+        db_video.publishedAt = yt_video.snippet?.publishedAt ? new Date(yt_video.snippet.publishedAt) : db_video.publishedAt || new Date();
+        db_video.commentCount = yt_video.statistics?.commentCount ? parseInt(yt_video.statistics.commentCount) : db_video.commentCount || 0;
+        db_video.lastChecked = new Date();
+
+        if (yt_video.etag !== db_video.etag) {
+            db_video.archive = [yt_video, ...(db_video.archive|| [])];
+            db_video.etag = yt_video.etag!;
+        }
+
+
+        await db_video.save();
+        return db_video;
   }
-  Video.init({
-    youtubeId: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      primaryKey: true,
+}
+Video.init({
+    id: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        primaryKey: true,
     },
-    channelId: {
-      type: DataTypes.STRING,
-      allowNull: false,
+    authorId: {
+        type: DataTypes.STRING,
+        allowNull: false,
     },
     title: {
-      type: DataTypes.STRING,
-      allowNull: false,
+        type: DataTypes.STRING,
+        allowNull: false,
     },
     description: {
-      type: DataTypes.TEXT,
-      allowNull: true,
+        type: DataTypes.TEXT,
+        allowNull: false,
     },
     publishedAt: {
-      type: DataTypes.DATE,
-      allowNull: true,
+        type: DataTypes.DATE,
+        allowNull: false,
     },
     lastChecked: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: null,
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: null,
     },
     archive: {
-      type: DataTypes.JSONB,
-      allowNull: true,
-    }
-  }, {
+        type: DataTypes.JSONB,
+        allowNull: false,
+    },
+    etag: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    commentCount: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    },
+    recheckInterval: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 86400
+    },
+    commentLastPageToken: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null
+    },
+}, {
     sequelize,
     modelName: 'Video',
-    timestamps: false,
-  });
+    timestamps: true,
+});

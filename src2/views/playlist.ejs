@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playlist Details</title>
+</head>
+<body>
+    <h1>Playlist Details</h1>
+    <ul>
+        <li><strong>ID:</strong> <%= playlist.Id %></li>
+        <li><strong>Title:</strong> <%= playlist.title %></li>
+        <li><strong>Author (Channel ID):</strong> <%= playlist.author %></li>
+        <li><strong>Last Checked:</strong> <%= playlist.lastChecked %></li>
+        <li><strong>Priority:</strong> <%= playlist.priority %></li>
+        <li><strong>Size (Number of Videos):</strong> <%= playlist.size %></li>
+        <li><strong>Recheck Interval:</strong> <%= playlist.recheckInterval %> seconds</li>
+    </ul>
+
+    <h2>Videos</h2>
+    <% if (playlist.videos && playlist.videos.length > 0) { %>
+        <ul>
+            <% playlist.videos.forEach(video => { %>
+                <li>
+                    <a href="../video/<%= video.snippet?.resourceId?.videoId %>"><strong>Video ID:</strong> <%= video.snippet?.resourceId?.videoId %></a> - 
+                    <strong>Title:</strong> <%= video.snippet?.title %>
+                </li>
+            <% }) %>
+        </ul>
+    <% } else { %>
+        <p>No videos found in this playlist.</p>
+    <% } %>
+</body>
+</html>

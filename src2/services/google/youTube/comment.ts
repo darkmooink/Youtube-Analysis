@@ -7,6 +7,30 @@ const TEXTFORMAT:"plainText"|"html" = "html"
 
 type YouTubeAuth = OAuth2Client | youtube_v3.Youtube;
 
+export async function getCommentsByVideoId(
+  youtube: youtube_v3.Youtube,
+  videoId: string,
+  nextPageToken?: string,
+): Promise<{comments:youtube_v3.Schema$CommentThread[], nextPageToken?: string}> {
+  const comments:youtube_v3.Schema$CommentThread[] = [];
+  let lastPageToken: string | undefined = nextPageToken;
+  do {
+    lastPageToken = nextPageToken;
+    const response: GaxiosResponse<youtube_v3.Schema$CommentThreadListResponse> = await youtube.commentThreads.list({
+      part: ['snippet', 'replies'],
+      videoId: videoId,
+      maxResults: 100,
+      pageToken: nextPageToken,
+      textFormat: TEXTFORMAT,
+    });
+    if (response.data.items) {
+      comments.push(...response.data.items);
+    }
+    nextPageToken = response.data.nextPageToken ?? undefined;
+  } while (nextPageToken);
+  return {comments:comments, nextPageToken:lastPageToken};
+}
+
 export async function getAllCommentsForVideo(auth: YouTubeAuth, videoId: string, options={forceAll:true}): Promise<youtube_v3.Schema$Comment[]> {
   const youTubeClient = auth instanceof OAuth2Client
     ? createYouTubeClient(auth)

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Channel Details</title>
+</head>
+<body>
+    <h1>Channel Details</h1>
+    <ul>
+        <li><strong>ID:</strong> <%= channel.Id %></li>
+        <li><strong>Name:</strong> <%= channel.Name %></li>
+        <li><strong>Description:</strong> <%= channel.Description %></li>
+        <li><strong>Subscribers:</strong> <%= channel.subscriberCount %></li>
+        <li><strong>Videos:</strong> <a href="../playlist/<%=channel.uploadsPlaylistId%>"><%= channel.videoCount %></a></li>
+        <li><strong>Created At:</strong> <%= channel.created %></li>
+        <li><strong>Updated At:</strong> <%= channel.lastCheckedAt %></li>
+        <li><strong>Thumbnail:</strong> <img src="<%= channel.profilePictureUrl %>" alt="Channel Thumbnail"> <%= similarProfileCount %></li>
+    </ul>
+</body>
+</html>

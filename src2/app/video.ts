@@ -1,17 +1,16 @@
-import { google } from 'googleapis';
 import { Request, Response } from 'express';
-import { Comment, commentToDB as commentToDB, fromVideo} from '../data/comments'
+import { createYouTubeClientWithKey } from '../services/google/youTube/youtube';
+import { Video } from '../data/video';
 
-export async function showVideoComments(req: Request, res: Response) {
-  const videoId = req.params.id;
-
+export async function showVideoDetails(req: Request, res: Response) {
+    const youtube = req.youTubeClient? req.youTubeClient : createYouTubeClientWithKey();
   try {
-    const youtube = req.youTubeClient!;
-    const comments = await fromVideo(req.googleSession!,videoId)
+    const videoId = req.params.id;
+    const video = await Video.getFromId(videoId, youtube);
     
-    res.render('video', { videoId, comments });
+    res.render('video2', { video });
   } catch (error) {
-    console.error('Failed to fetch video comments:', error);
-    res.status(500).send(`Error fetching comments for video ${videoId}`);
+    console.error('Error fetching playlist details:', error);
+    res.status(500).send('Internal server error');
   }
 }

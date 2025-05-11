@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comments</title>
+</head>
+<body>
+    <h1>Comments</h1>
+    <ul>
+        <% comments.forEach(comment => { %>
+            <li>
+                <strong>Author:</strong> <%= comment.author %><br>
+                <strong>Text:</strong> <%= comment.text %><br>
+                <strong>Published At:</strong> <%= comment.publishedAt %><br>
+                <% if (comment.edited) { %>
+                    <strong>Edited At:</strong> <%= comment.edited %><br>
+                <% } %>
+                <% if (comment.parentId) { %>
+                    <strong>Reply to:</strong> <%= comment.parentId %><br>
+                <% } %>
+                <strong>Replies:</strong> <%= comment.replyCount || 0 %><br>
+            </li>
+        <% }); %>
+    </ul>
+</body>
+</html>

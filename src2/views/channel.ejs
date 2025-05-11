@@ -31,8 +31,9 @@
     
     <% const uploads = channelDetails.uploads || {}; 
     const videos = uploads.videos || [];%>
-<p><strong>Vidos Uploaded:</strong> <%=videos.length%>/<%= uploads.playlist.size %></p>
+    <p><strong>Vidos Uploaded:</strong> <%=videos.length%>/<%= uploads.playlist.size %></p>
 <%if (videos.length < uploads.playlist.size) {%>
+
   <form method="GET" action="">
     <button type="submit" name="updateVideo" value="true">Update</button>
   </form>
@@ -42,7 +43,13 @@
 
     <ul id="videosContainer" style="display: none;">
       <% videos.forEach(video => { %>
-        <li><%= video.title %> - <%= video.publishedAt %> - <%= video.archive.length%></li>
+
+<%const snippet = video.archive[0].snippet
+const statistics = video.statistics
+//const commentCount = statistics.commentCount
+console.log(statistics)
+%>
+        <li><a href="../video/<%=video.youtubeId%>"><%= video.title %></a> - <%= video.publishedAt %> - <%= video.archive[0].statistics?.commentCount %></li>
       <% }) %>
     </ul>
   <% } else { %>
@@ -56,7 +63,7 @@
     <p><strong>Comments:</strong><%=channelDetails.comments.length%>/<%=channelDetails.channel.commentCount%><button id="toggleCommentsButton" onclick="toggleVisibility('commentsContainer', 'toggleCommentsButton', 'Show Comments', 'Hide Comments');">Show Comments</button>
     <% if (channelDetails.comments.length < channelDetails.channel.commentCount){%>
        <form method="GET" action="">
-    <button type="submit" name="updateComments" value="true">Update</button>
+    <button type="submit" name="updateComment" value="true">Update</button>
   </form>
       <%}%>
     </p>
@@ -68,6 +75,25 @@
   <% } else { %>
     <p>No comments found.</p>
   <% } %>
+
+<p><strong>commenters</strong>
+<%=channelDetails.commenters.length%>/<%=channelDetails.channel.commenterCount%>
+<button id="toggleCommentersButton" onclick="toggleVisibility('commentersContainer', 'toggleCommentersButton', 'Show Commenters', 'Hide Commenters');">Show Commenters</button>
+<% if (channelDetails.commenters.length < channelDetails.channel.commenterCount){%>
+  <form method="GET" action="">
+    <button type="submit" name="updateCommenters" value="true">Update</button>
+  </form>
+  <%}%>
+  <% if (channelDetails.commenters.length > 0) { %>
+    <ul id="commentersContainer" style="display: none;">
+      <% channelDetails.commenters.forEach(commenter => { %>
+        <li><a href="<%= commenter.youtubeChannelId %>"><%= commenter.channelName %></a> - <%= commenter.youtubeChannelId %></li>
+      <% }) %>
+    </ul>
+  <% } else { %>
+    <p>No commenters found.</p>
+  <% } %>
+</p>
 
 </body>
 </html>
