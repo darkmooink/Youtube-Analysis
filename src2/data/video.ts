@@ -12,7 +12,7 @@ export class Video extends Model {
     /*
     * The channelId of the video
     */
-    public authorID!: string;
+    public authorId!: string;
     public title!: string;
     public description!: string;
     public publishedAt!: Date;
@@ -64,7 +64,7 @@ export class Video extends Model {
             db_video = Video.build({ id: yt_video.id });
         }
         db_video.title = yt_video.snippet?.title || db_video.title || "";
-        db_video.authorID = yt_video.snippet?.channelId || db_video.authorID || "";
+        db_video.authorId = yt_video.snippet?.channelId || db_video.authorId || "";
         db_video.description = yt_video.snippet?.description || db_video.description || "";
         db_video.publishedAt = yt_video.snippet?.publishedAt ? new Date(yt_video.snippet.publishedAt) : db_video.publishedAt || new Date();
         db_video.commentCount = yt_video.statistics?.commentCount ? parseInt(yt_video.statistics.commentCount) : db_video.commentCount || 0;

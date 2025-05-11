@@ -94,6 +94,15 @@ OpenAIModerationResult.init({
         autoIncrement: true,
         primaryKey: true,
     },
+    commentId: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: false,
+        references: {
+            model: 'comments',
+            key: 'id',
+        },
+    },
     targetType: {
         type: DataTypes.STRING,
         allowNull: false,

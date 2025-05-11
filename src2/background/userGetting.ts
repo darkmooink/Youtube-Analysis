@@ -145,7 +145,7 @@ async function extractPlaylistsFromUsers(){
                 const playlist:Partial<Playlist> = {
                     youtubeId:youtubeId,
                     type:type,
-                    author: channel.youtubeChannelId,
+                    authorId: channel.youtubeChannelId,
                 }
                 if(type=="uploads" && channel.archive![0].statistics?.videoCount){
                     playlist.size = parseInt(channel.archive![0].statistics?.videoCount)

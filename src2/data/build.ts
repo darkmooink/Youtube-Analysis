@@ -5,14 +5,14 @@ import './comment';
 // import './categorisations';
 import './channel';
 // import './userYtUser';
-// import './openAIModerator'
+import './openAIModerator'
 import './playlist'
 import './video'
 
 // import { Categorisation } from './categorisations';
 import { Comment } from './comment';
 // import { Categories } from './categories';
-// import { User } from './user';
+import { User } from './user';
 import { Channel } from './channel';
 import { Playlist } from './playlist';
 import { Video } from './video';
@@ -27,22 +27,35 @@ import { Video } from './video';
 // Categories.hasMany(Categorisation, { foreignKey: 'categoryId' });
 // User.hasMany(Categorisation, { foreignKey: 'userId' });
 
-// Comment.belongsTo(Channel, {
-//   foreignKey: 'author',
-// });
+Comment.belongsTo(Channel, {
+  foreignKey: 'authorId',
+  as: 'author',
+});
 
-// Channel.hasMany(Comment, {
-//   foreignKey: 'author',
-// });
+Channel.hasMany(Comment, {
+  foreignKey: 'authorId',
+  as : 'commentsMade',});
 
-Playlist.belongsTo(Channel, { foreignKey: 'author' });
-Channel.hasMany(Playlist, { foreignKey: 'author'});
 
-Video.belongsTo(Channel, { foreignKey: 'author' });
-Channel.hasMany(Video, { foreignKey: 'author'});
+Video.belongsTo(Channel, { foreignKey: 'authorId', as: 'author' });
+Channel.hasMany(Video, { foreignKey: 'authorId', as: 'videos' });
 
-Video.hasMany(Comment,{foreignKey:'videoId'})
-Comment.belongsTo(Video,{foreignKey:'videoId'})
+Video.hasMany(Comment,{foreignKey:'videoId', as:'comments'})
+Comment.belongsTo(Video,{foreignKey:'videoId', as:'video'})
+
+Channel.hasOne(Playlist, {
+  foreignKey: 'uploadsPlaylistId',
+  as: 'uploadsPlaylist',
+});
+Channel.hasMany(Playlist, {
+  foreignKey: 'authorId',
+  as: 'playlists',
+});
+Playlist.belongsTo(Channel, { foreignKey: 'authorId', as: 'author'});
+Playlist.belongsTo(Channel, {
+  foreignKey: 'uploadsPlaylistId',
+  as: 'uploader',
+});
 
 
 

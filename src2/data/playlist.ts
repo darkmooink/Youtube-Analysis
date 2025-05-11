@@ -10,7 +10,7 @@ import { getAllPlaylistItems } from '../services/google/youTube/playlistItems';
 export class Playlist extends Model{
     public Id!:string;
     public title!:string;
-    public author!:string;
+    public authorId!:string;
     public lastChecked!:Date;
     public priority!:number;
     public size!:number;
@@ -62,7 +62,7 @@ export class Playlist extends Model{
             db_playlist = Playlist.build({ Id: yt_playlist.id });
         }
         db_playlist.title = yt_playlist.snippet?.title || db_playlist.title || "";
-        db_playlist.author = yt_playlist.snippet?.channelId || db_playlist.author || "";
+        db_playlist.authorId = yt_playlist.snippet?.channelId || db_playlist.authorId || "";
         db_playlist.lastChecked = new Date();
         db_playlist.priority = 0;
         db_playlist.size = yt_playlist.contentDetails?.itemCount || -1;
@@ -77,8 +77,12 @@ Playlist.init({
         type:DataTypes.STRING,
         primaryKey:true,
     },
+    title:{
+        type:DataTypes.STRING,
+        allowNull: false,
+    },
     type:DataTypes.STRING,
-    author:DataTypes.STRING,
+    authorId:DataTypes.STRING,
     lastChecked: {
         type: DataTypes.DATE,
         allowNull: true,
