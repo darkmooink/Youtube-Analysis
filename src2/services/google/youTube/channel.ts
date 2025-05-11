@@ -7,6 +7,12 @@ import { chunk } from "../../../utils/array";
 const TEXTFORMAT:"plainText"|"html" = "html" 
 
 type YouTubeAuth = OAuth2Client | youtube_v3.Youtube;
+const parts = ["brandingSettings", "contentDetails", "id", "localizations", "snippet", "statistics", "status", ];
+
+export async function getChannelByHandle(youtube: youtube_v3.Youtube, handle: string): Promise<youtube_v3.Schema$Channel | null> {
+    const response: GaxiosResponse<youtube_v3.Schema$ChannelListResponse> = await youtube.channels.list({part:parts, forHandle: handle, });
+    return response.data.items?.[0] || null;
+}
 
 export async function getChannelsById(
     auth: YouTubeAuth, 
@@ -37,8 +43,8 @@ export async function getChannelsById(
         .map(([key]) => key)
     for(const block of blocks){
         const response:GaxiosResponse<youtube_v3.Schema$ChannelListResponse> = await youTubeClient.channels.list({
-            part:part,
-            id:channelIds
+            part:parts,
+            id:block
         })
     
         if (response.data.items) allChannels.push(...response.data.items)
